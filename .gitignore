@@ -1,9 +1,10 @@
 # Ignore run files
 **/run.py
 
-# Ignore pyc adn class
+# Ignore pyc, class and log files
 *.pyc
 *.class
+*.log
 
 # Ignore data and db Folders
 data/
@@ -25,7 +26,7 @@ dbases/
 
 # Project files should be checked into the repository, unless a significant
 # proportion of contributors will probably not be using Sublime Text
-# *.sublime-project
+*.sublime-project
 
 # SFTP configuration file
 sftp-config.json
