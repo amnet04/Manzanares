@@ -1,4 +1,4 @@
-# TheThing.py
+# thing.py
 
 import sqlite3
 import re
@@ -6,7 +6,7 @@ import logging
 from datetime import datetime
 
 
-class thingClass():
+class thing():
 	""" The primary class for text analysis whit the Manzanares package:  Stores the txt/csv/tsv/sqlite file location and some other data and methods to process it. Also, create and connect with sqlite databases  to handle token/types.
     
     ...
@@ -114,63 +114,7 @@ class thingClass():
 
 		def create_structure(self)
 
-			cretable_base =  "CREATE TABLE IF NOT EXISTS Thing ("
-			creteble_base += "ThigId INTEGER NOT NULL PRIMARY KEY, "
-			cretable_base += "Name TEXT NOT NULL UNIQUE, "
-			cretable_base += "TFolder TEXT NOT NULL UNIQUE, "
-			cretable_base += "TFile TEXT NOT NULL UNIQUE, "
-			cretable_base += "Encoding TEXT NOT NULL DEFAULT 'UTF-8', "
-			cretable_base += "SBreak TEXT, "
-			cretable_base += "LBreak TEXT, " 
-         	cretable_base += "CONSTRAINT unq UNIQUE (Name, TFolder, TFile))"
 
-         	cretable_lang =  "CREATE TABLE IF NOT EXISTS Langs ("
-         	cretable_lang += "LId INTEGER NOT NULL PRIMARY KEY, "
-         	cretable_lang += "Lang TEXT NOT NULL UNIQUE)" 
-
-         	cretable_thil =  "CREATE TABLE IF NOT EXISTS ThingsLangs ("
-         	cretable_thil += "TLId INTEGER NOT NULL PRIMARY KEY, "
-         	cretable_thil += "ThingId INTEGER NOT NULL, "
-         	cretable_thil += "LId INTEGER NOT NULL, "
-         	cretable_thil += "FOREING KEY(LId)  REFERENCES Langs(LId), "
-         	cretable_thil += "FOREING KEY(ThingId)  REFERENCES ThingId(ThingId)), "
-         	cretable_thil += "CONSTRAINT unq UNIQUE (ThingId, LId))"
-
-         	cretable_gaps += "CREATE TABLE IF NOT EXISTS GAPS ("
-         	cretable_gaps += "GapsId INTEGER NOT NULL PRIMARY KEY, "
-         	cretable_gaps += "Gaps TEXT NOT NULL UNIQUE)"
-
-         	cretable_thga =  "CREATE TABLE IF NOT EXISTS ThingsGaps ("
-         	cretable_thga += "TGId INTEGER NOT NULL PRIMARY KEY, "
-         	cretable_thga += "ThingId INTEGER NOT NULL, "
-         	cretable_thga += "GapsId INTEGER NOT NULL, "
-         	cretable_thga += "FOREING KEY(GapsId)  REFERENCES Gaps(GapsId), "
-         	cretable_thga += "FOREING KEY(ThingId)  REFERENCES ThingId(ThingId)), "
-         	cretable_thga += "CONSTRAINT unq UNIQUE (ThingId, GapsId))" 
-
-         	
-         	cretable_cpat =  "CREATE TABLE IF NOT EXISTS ClearPatterns ("
-         	cretable_cpat += "CPId INTEGER NOT NULL PRIMARY KEY, "
-         	cretable_cpat += "Target TEXT NOT NULL"
-         	cretable_cpat += "Replace TEXT NOT NULL"
-         	cretable_cpat += "CONSTRAINT unq UNIQUE (Target Replace))"
-
-         	cretable_thcp =  "CREATE TABLE IF NOT EXISTS ThingsCleanPatterns ("
-         	cretable_thcp += "CPId INTEGER NOT NULL PRIMARY KEY, "
-         	cretable_thcp += "ThingId INTEGER NOT NULL, "
-         	cretable_thcp += "GapsId INTEGER NOT NULL, "
-         	cretable_thcp += "FOREING KEY(CPId)  REFERENCES Gaps(CPId), "
-         	cretable_thcp += "FOREING KEY(ThingId)  REFERENCES ThingId(ThingId)), "
-         	cretable_thcp += "CONSTRAINT unq UNIQUE (ThingId, CPId))"
-
-         	token_catalog =  "CREATE TABLE IF NOT EXIST TypeCatalogue("
-         	token_catalog += "TypeID INTEGER NOT NULL PRIMARY KEY, "
-         	token_catalog += "Type TEXT NOT NULL UNIQUE, "
-         	token_catalog += "Length INTEGER NOT NULL)"
-
-         	token_thing_c =  "REATE TABLE IF NOT EXIST  TokThing("
-         	token_thing_c =  "TokThingId  INTEGER NOT NULL PRIMARY KEY, "
-         	token_thing_c =  
 
 
 
