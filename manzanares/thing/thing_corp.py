@@ -89,11 +89,10 @@ class thing_corp():
                  lbreak,
                  tokensare,
                  gap,
+                 languages,
                  cleanpatt):
 
-        
-        CleanPatt = ''' INSERT INTO 
-                    '''
+
         ThingValues = (name, 
                  description, 
                  tfolder, 
@@ -108,31 +107,55 @@ class thing_corp():
             self.db_con.commit()
             ThingId = self.db_cur.lastrowid
             logging.info("Thing {} created".format(self.name))
-        except:
-            logging.info("{} Thing whit the same file, tokens and gaps already exists".format(name))
-            self.db_cur.execute(CHK_THING, [ThingValues[val] for val in [0,2,3,7,8]])
-            ThingId = self.db_cur.fetchone()[0]
+        except sqlite3.IntegrityError as e:
+            if "UNIQUE constraint failed" in "{}".format(e):
+                logging.info("{} Thing whit the same file, tokens and gaps already exists, checking status".format(name))
+                self.db_cur.execute(CHK_THING, [ThingValues[val] for val in [0,2,3,7,8]])
+                resultt  = self.db_cur.fetchone()
+                if  resultt:       
+                    ThingId = resultt[0]
+                    Finished = resultt[15]
+                    if Finished == True:
+                        raise "{} Thing already exists and the process was finished".format(name)
+            else:
+                logging.info(e)
+                raise e
+
 
         for pattern in cleanpatt:
                 self.db_cur.execute(CHK_CPATT, pattern)
                 resulta = self.db_cur.fetchone()
                 if resulta:
                     cpattid = resulta[0]
-                    self.db_cur.execute(CHK_CPATR, (cpattid, ThingId))
+                    self.db_cur.execute(CHK_CPATR, (ThingId, cpattid))
                     resultb = self.db_cur.fetchone()
-                    if not resultb:
-                        self.db_cur.execute(ADD_CPATR, (cpattid, ThingId))
+                    if resultb == None:
+                        self.db_cur.execute(ADD_CPATR, (ThingId, cpattid))
                         self.db_con.commit()
                 else:               
                     self.db_cur.execute(ADD_CPATT, pattern)
                     self.db_con.commit()
                     cpattid = self.db_cur.lastrowid
-                    self.db_cur.execute(ADD_CPATR, (cpattid, ThingId))
+                    self.db_cur.execute(ADD_CPATR, (ThingId,cpattid))
                     self.db_con.commit()
 
-                
-
-                
+        for language in languages:
+                print(language)
+                self.db_cur.execute(CHK_LANGU, [language])
+                resulta = self.db_cur.fetchone()
+                if resulta:
+                    LId = resulta[0]
+                    self.db_cur.execute(CHK_LANGT, (ThingId, LId))
+                    resultb = self.db_cur.fetchone()
+                    if not resultb:
+                        self.db_cur.execute(ADD_LANGT, (ThingId, LId))
+                        self.db_con.commit()
+                else:               
+                    self.db_cur.execute(ADD_LANGU, [language])
+                    self.db_con.commit()
+                    LId = self.db_cur.lastrowid
+                    self.db_cur.execute(ADD_LANGT, (ThingId, LId))
+                    self.db_con.commit()
 
 
     def RecoverThing(self):
