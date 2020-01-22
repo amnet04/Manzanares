@@ -14,8 +14,28 @@ def test_thing_corp_db(tmpdir_factory):
     print(dbfile)
     tc1 = thing_corp(name="prv", db_folder=tmp_folder)
     assert path.isfile(dbfile), "Test passed, database file created"
-    tc1.CheckStruc()
+    tc1.CheckDbStruc()
+    tc1.AddThing( "name", 
+                 "description", 
+                 "./", 
+                 "quevedoprv.txt",
+                 "utf-8",
+                 r"[\.\n]",
+                 "\n",
+                 "tokensare",
+                 "gap",
+                 [("\n{1,}","\n"),(r"[\!\¡\,]","")])
     tc1.Disconnect()
     tc2 = thing_corp(name="prv", db_folder=tmp_folder)
-
+    tc2.AddThing( "name", 
+                 "description", 
+                 "./", 
+                 "quevedoprv.txt",
+                 "utf-8",
+                 r"[\.\n]",
+                 "\n",
+                 "tokensare",
+                 "gap",
+                 [("\n{1,}","\n"),(r"[\!\¡\,]","")])
+    tc2.Disconnect()
 
