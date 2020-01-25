@@ -84,6 +84,6 @@ def test_otherthing(tmpdir_factory):
                  r"\n",
                  "symbols",
                  "gap",
-                 ["L3"],
+                 ["L3", "L4"],
                  [(r"\n{2,}",r"\n{1}"),(r"[\!\¡\,]","\n")])
     tc3.Disconnect()

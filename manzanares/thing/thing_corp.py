@@ -140,7 +140,6 @@ class thing_corp():
                     self.db_con.commit()
 
         for language in languages:
-                print(language)
                 self.db_cur.execute(CHK_LANGU, [language])
                 resulta = self.db_cur.fetchone()
                 if resulta:
