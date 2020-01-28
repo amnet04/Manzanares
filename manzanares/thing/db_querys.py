@@ -12,7 +12,7 @@ Attributes:
     type_cataloge (str): Query to create TypeCatalog table
 """
 
-table_dic = {"Thing": [(0, 'ThigId', 'INTEGER', 1, None, 1),
+table_dic = {"Things": [(0, 'ThigId', 'INTEGER', 1, None, 1),
                        (1, 'Name', 'TEXT', 1, None, 0),
                        (2, 'Description', 'TEXT', 1, None, 0),
                        (3, 'TFolder', 'TEXT', 1, None, 0), 
@@ -28,6 +28,8 @@ table_dic = {"Thing": [(0, 'ThigId', 'INTEGER', 1, None, 1),
                        (13, 'TokensAre', 'TEXT', 1, None, 0), 
                        (14, 'Gap', 'TEXT', 1, None, 0),
                        (15, 'Finished', 'BOOL', 1, 'False', 0)],
+             "Garbage": [()],
+             "GarbageTh": [()],
              "Langs": [(0, 'LId', 'INTEGER', 1, None, 1),
                        (1, 'Lang', 'TEXT', 1, None, 0)], 
              "ThingsLangs":[(0, 'ThingId', 'INTEGER', 1, None, 0), 
@@ -57,7 +59,7 @@ table_dic = {"Thing": [(0, 'ThigId', 'INTEGER', 1, None, 1),
 """
 Base table
 """
-cretable_base =  "CREATE TABLE IF NOT EXISTS Thing ("
+cretable_base =  "CREATE TABLE IF NOT EXISTS Things ("
 cretable_base += "ThigId INTEGER NOT NULL PRIMARY KEY, "
 cretable_base += "Name TEXT NOT NULL, "
 cretable_base += "Description TEXT NOT NULL, "
@@ -77,6 +79,27 @@ cretable_base += "Finished BOOL NOT NULL DEFAULT False, "
 cretable_base += "CONSTRAINT unq UNIQUE (Name, TFolder, TFile, TokensAre, Gap))"
 
 """
+Garbage table
+"""
+cretable_garbage =  "CREATE TABLE IF NOT EXISTS Garbage("
+cretable_garbage += "GarbageId INTEGER NOT NULL, "
+cretable_garbage += "Garbage TEXT NOT NULL, "
+cretable_garbage += "Replace TEXT NOT NULL, "
+cretable_garbage += "CONSTRAINT unq UNIQUE (Garbage, Replace))"
+
+"""
+Garbage/thing table
+"""
+cretable_garthin =  "CREATE TABLE IF NOT EXISTS GarbageTh("
+cretable_garthin += "GarbageId INTEGER NOT NULL, "
+cretable_garthin += "ThigId INTEGER NOT NULL, "
+cretable_garthin += "Line INTEGER NOT NULL, "
+cretable_garthin += "Position INTEGER NOT NULL, "
+cretable_garthin += "FOREIGN KEY(ThigId)  REFERENCES Thig(ThigId), "
+cretable_garthin += "FOREIGN KEY(GarbageId)  REFERENCES Garbage(GarbageId), "
+cretable_garthin += "CONSTRAINT unq UNIQUE (ThingId, Line, Position))"
+
+"""
 Lang tables
 """
 cretable_lang =  "CREATE TABLE IF NOT EXISTS Langs ("
@@ -87,7 +110,7 @@ cretable_thil =  "CREATE TABLE IF NOT EXISTS ThingsLangs ("
 cretable_thil += "ThingId INTEGER NOT NULL, "
 cretable_thil += "LId INTEGER NOT NULL, "
 cretable_thil += "FOREIGN KEY(LId)  REFERENCES Langs(LId), "
-cretable_thil += "FOREIGN KEY(ThingId)  REFERENCES ThingId(ThingId), "
+cretable_thil += "FOREIGN KEY(ThingId)  REFERENCES Things(ThingId), "
 cretable_thil += "CONSTRAINT unq UNIQUE (ThingId, LId))"
 
 """
@@ -103,7 +126,7 @@ cretable_thcp =  "CREATE TABLE IF NOT EXISTS ThingsCleanPatterns ("
 cretable_thcp += "ThingId INTEGER NOT NULL, "
 cretable_thcp += "CPId INTEGER NOT NULL, "
 cretable_thcp += "FOREIGN KEY(CPId)  REFERENCES ClearPatterns(CPId), "
-cretable_thcp += "FOREIGN KEY(ThingId)  REFERENCES ThingId(ThingId), "
+cretable_thcp += "FOREIGN KEY(ThingId)  REFERENCES Things(ThingId), "
 cretable_thcp += "CONSTRAINT unq UNIQUE (ThingId, CPId))"
 
 """
@@ -114,27 +137,18 @@ type_cataloge += "TypeID INTEGER NOT NULL PRIMARY KEY, "
 type_cataloge += "Type TEXT NOT NULL UNIQUE, "
 type_cataloge += "Length INTEGER NOT NULL)"
 
-cretable_thty =  "CREATE TABLE IF NOT EXISTS  TypThing("
-cretable_thty += "TypThingId  INTEGER NOT NULL PRIMARY KEY, "
-cretable_thty += "ThingId INTEGER NOT NULL, "
-cretable_thty += "TypeId INTEGER NOT NULL, "
-cretable_thty += "Count INTEGER NOT NULL, "
-cretable_thty += "FOREIGN KEY(TypeId)  REFERENCES TypeCatalogue(TypeId), "
-cretable_thty += "FOREIGN KEY(ThingId)  REFERENCES ThingId(ThingId), "
-cretable_thty += "CONSTRAINT unq UNIQUE (ThingId, TypeId))"
-
 """
 Token Catalogue
 """
 token_catalog =  "CREATE TABLE IF NOT EXISTS TokenCatalog("
 token_catalog += "TokThingId  INTEGER NOT NULL PRIMARY KEY, "
-token_catalog += "TypThingId  INTEGER NOT NULL, "
-token_catalog += "Sentence INTEGER NOT NULL, "
-token_catalog += "PositionInSentence INTEGER NOT NULL,"
-token_catalog += "SymbolBefore TEXT,  "
-token_catalog += "SymbolAfter TEXT,  "
-token_catalog += "Position  INTEGER NOT NULL, "
-token_catalog += "FOREIGN KEY(TypThingId)  REFERENCES TypThing(TypThingId))"
+token_catalog += "ThingId  INTEGER NOT NULL, "
+token_catalog += "Line INTEGER NOT NULL, "
+token_catalog += "Initial_Position, INTEGER NOT NULL, "
+token_catalog += "Final_Position, INTEGER NOT NULL, "
+token_catalog += "FOREIGN KEY(ThingId)  REFERENCES Thing(ThingId)), "
+token_catalog += "FOREIGN KEY(TypThingId)  REFERENCES TypThing(TypThingId)), "
+token_catalog += "CONSTRAINT unq UNIQUE (ThingId, Line, Initial_Position))"
 
 """
 ADDTHIGS

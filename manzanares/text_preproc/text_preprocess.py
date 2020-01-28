@@ -44,9 +44,14 @@ def normalize_txt(text,patterns):
        New string without the text that matches whit patterns.
 
     """
+    cleaned = []
+    clean_text = text
     for pattern in patterns:
-        text = re.sub(pattern[0], pattern[1], text)
-    return text
+        #print(pattern)
+        for match in re.finditer(pattern[0], text):
+            cleaned.append([match.span(), match.group(), pattern[1]])
+            clean_text = re.sub(pattern[0], pattern[1], clean_text)
+    return clean_text, cleaned
 
 
 

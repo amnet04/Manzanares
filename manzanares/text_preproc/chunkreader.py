@@ -6,8 +6,12 @@ def ChunkReader(inputfile, chunkSize=1, end=""):
 			data = f.read(chunkSize)
 			if not data:
 				break
-			while  not  re.compile(r'{}'.format(end)).match(data[-1:]):
-				data+=f.read(1)
+			while  not  re.compile(end).match(data[-1:]):
+				next = f.read(1)
+				if next != "":
+					data += next
+				else:
+					break
 			yield data
 	yield ""
 
