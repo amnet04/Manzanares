@@ -28,8 +28,13 @@ table_dic = {"Things": [(0, 'ThigId', 'INTEGER', 1, None, 1),
                        (13, 'TokensAre', 'TEXT', 1, None, 0), 
                        (14, 'Gap', 'TEXT', 1, None, 0),
                        (15, 'Finished', 'BOOL', 1, 'False', 0)],
-             "Garbage": [()],
-             "GarbageTh": [()],
+             "Garbage": [(0, 'GarbageId', 'INTEGER', 1, None, 0), 
+                         (1, 'Garbage', 'TEXT', 1, None, 0), 
+                         (2, 'Replace', 'TEXT', 1, None, 0)],
+             "GarbageTh": [(0, 'GarbageId', 'INTEGER', 1, None, 0), 
+                          (1, 'ThingId', 'INTEGER', 1, None, 0), 
+                          (2, 'Line', 'INTEGER', 1, None, 0), 
+                          (3, 'Position', 'INTEGER', 1, None, 0)],
              "Langs": [(0, 'LId', 'INTEGER', 1, None, 1),
                        (1, 'Lang', 'TEXT', 1, None, 0)], 
              "ThingsLangs":[(0, 'ThingId', 'INTEGER', 1, None, 0), 
@@ -39,20 +44,17 @@ table_dic = {"Things": [(0, 'ThigId', 'INTEGER', 1, None, 1),
                               (2, 'Replace', 'TEXT', 1, None, 0)],
              "ThingsCleanPatterns":[(0, 'ThingId', 'INTEGER', 1, None, 0),
                                     (1, 'CPId', 'INTEGER', 1, None, 0)],                 
-             "TypeCatalogue":[(0, 'TypeID', 'INTEGER', 1, None, 1), 
-                              (1, 'Type', 'TEXT', 1, None, 0), 
-                              (2, 'Length', 'INTEGER', 1, None, 0)],
-             "TypThing": [(0, 'TypThingId', 'INTEGER', 1, None, 1), 
-                          (1, 'ThingId', 'INTEGER', 1, None, 0), 
-                          (2, 'TypeId', 'INTEGER', 1, None, 0), 
-                          (3, 'Count', 'INTEGER', 1, None, 0)],
+             "TypeCatalogue":[(0, 'TypeId', 'INTEGER', 1, None, 1), 
+                              (1, 'Type', 'TEXT', 1, None, 0)], 
              "TokenCatalog":[(0, 'TokThingId', 'INTEGER', 1, None, 1), 
-                             (1, 'TypThingId', 'INTEGER', 1, None, 0), 
-                             (2, 'Sentence', 'INTEGER', 1, None, 0), 
-                             (3, 'PositionInSentence', 'INTEGER', 1, None, 0), 
-                             (4, 'SymbolBefore', 'TEXT', 0, None, 0), 
-                             (5, 'SymbolAfter', 'TEXT', 0, None, 0), 
-                             (6, 'Position', 'INTEGER', 1, None, 0)]
+                             (1, 'ThingId', 'INTEGER', 1, None, 0), 
+                             (2, 'TypeId', 'INTEGER', 1, None, 0), 
+                             (3, 'Form', 'TEXT', 0, None, 0), 
+                             (4, 'Line', 'INTEGER', 1, None, 0), 
+                             (5, 'Sentence', 'INTEGER', 1, None, 0), 
+                             (6, 'SentenceEND', 'INTEGER', 1, None, 0), 
+                             (7, 'InitialP', 'INTEGER', 1, None, 0), 
+                             (8, 'FinalP', 'INTEGER', 1, None, 0)]
     }
 
 
@@ -81,23 +83,23 @@ cretable_base += "CONSTRAINT unq UNIQUE (Name, TFolder, TFile, TokensAre, Gap))"
 """
 Garbage table
 """
-cretable_garbage =  "CREATE TABLE IF NOT EXISTS Garbage("
-cretable_garbage += "GarbageId INTEGER NOT NULL, "
-cretable_garbage += "Garbage TEXT NOT NULL, "
-cretable_garbage += "Replace TEXT NOT NULL, "
-cretable_garbage += "CONSTRAINT unq UNIQUE (Garbage, Replace))"
+cretable_garb =  "CREATE TABLE IF NOT EXISTS Garbage("
+cretable_garb += "GarbageId INTEGER NOT NULL, "
+cretable_garb += "Garbage TEXT NOT NULL, "
+cretable_garb += "Replace TEXT NOT NULL, "
+cretable_garb += "CONSTRAINT unq UNIQUE (Garbage, Replace))"
 
 """
 Garbage/thing table
 """
-cretable_garthin =  "CREATE TABLE IF NOT EXISTS GarbageTh("
-cretable_garthin += "GarbageId INTEGER NOT NULL, "
-cretable_garthin += "ThigId INTEGER NOT NULL, "
-cretable_garthin += "Line INTEGER NOT NULL, "
-cretable_garthin += "Position INTEGER NOT NULL, "
-cretable_garthin += "FOREIGN KEY(ThigId)  REFERENCES Thig(ThigId), "
-cretable_garthin += "FOREIGN KEY(GarbageId)  REFERENCES Garbage(GarbageId), "
-cretable_garthin += "CONSTRAINT unq UNIQUE (ThingId, Line, Position))"
+cretable_gart =  "CREATE TABLE IF NOT EXISTS GarbageTh("
+cretable_gart += "GarbageId INTEGER NOT NULL, "
+cretable_gart += "ThingId INTEGER NOT NULL, "
+cretable_gart += "Line INTEGER NOT NULL, "
+cretable_gart += "Position INTEGER NOT NULL, "
+cretable_gart += "FOREIGN KEY(ThingId)  REFERENCES Things(ThingId), "
+cretable_gart += "FOREIGN KEY(GarbageId)  REFERENCES Garbage(GarbageId), "
+cretable_gart += "CONSTRAINT unq UNIQUE (ThingId, Line, Position))"
 
 """
 Lang tables
@@ -133,9 +135,8 @@ cretable_thcp += "CONSTRAINT unq UNIQUE (ThingId, CPId))"
 Type Catalogue
 """
 type_cataloge =  "CREATE TABLE IF NOT EXISTS TypeCatalogue("
-type_cataloge += "TypeID INTEGER NOT NULL PRIMARY KEY, "
-type_cataloge += "Type TEXT NOT NULL UNIQUE, "
-type_cataloge += "Length INTEGER NOT NULL)"
+type_cataloge += "TypeId INTEGER NOT NULL PRIMARY KEY, "
+type_cataloge += "Type TEXT NOT NULL UNIQUE )"
 
 """
 Token Catalogue
@@ -143,17 +144,21 @@ Token Catalogue
 token_catalog =  "CREATE TABLE IF NOT EXISTS TokenCatalog("
 token_catalog += "TokThingId  INTEGER NOT NULL PRIMARY KEY, "
 token_catalog += "ThingId  INTEGER NOT NULL, "
+token_catalog += "TypeId  INTEGER NOT NULL, "
+token_catalog += "Form TEXT,"
 token_catalog += "Line INTEGER NOT NULL, "
-token_catalog += "Initial_Position, INTEGER NOT NULL, "
-token_catalog += "Final_Position, INTEGER NOT NULL, "
-token_catalog += "FOREIGN KEY(ThingId)  REFERENCES Thing(ThingId)), "
-token_catalog += "FOREIGN KEY(TypThingId)  REFERENCES TypThing(TypThingId)), "
-token_catalog += "CONSTRAINT unq UNIQUE (ThingId, Line, Initial_Position))"
+token_catalog += "Sentence INTEGER NOT NULL,"
+token_catalog += "SentenceEND INTEGER NOT NULL CHECK(SentenceEND IN (0, 1)),"
+token_catalog += "InitialP INTEGER NOT NULL, "
+token_catalog += "FinalP INTEGER NOT NULL, "
+token_catalog += "FOREIGN KEY(ThingId)  REFERENCES Thing(ThingId),"
+token_catalog += "FOREIGN KEY(TypeId)  REFERENCES TypeCatalogue(TypeId), "
+token_catalog += "CONSTRAINT unq UNIQUE (ThingId, Line, InitialP))"
 
 """
-ADDTHIGS
+ADDTHINGS
 """
-ADD_THING = ''' INSERT INTO Thing(Name,
+ADD_THING = ''' INSERT INTO Things(Name,
                 Description,
                 TFolder,
                 TFile,
@@ -166,7 +171,7 @@ ADD_THING = ''' INSERT INTO Thing(Name,
                 VALUES(?,?,?,?,?,?,?,?,?) '''
 
 CHK_THING = ''' SELECT  *
-                FROM Thing
+                FROM Things
                 WHERE Name=? 
                 AND TFolder=? 
                 AND TFile=?
@@ -174,10 +179,10 @@ CHK_THING = ''' SELECT  *
                 AND Gap =?
                 '''
 
-ADD_CPATT = ''' INSERT INTO CleanPatterns(Target, Replace)
+ADD_CPATR = ''' INSERT INTO CleanPatterns(Target, Replace)
                 VALUES(?,?) '''
 
-ADD_CPATR = ''' INSERT INTO ThingsCleanPatterns(ThingId, CPId)
+ADD_CPATT = ''' INSERT INTO ThingsCleanPatterns(ThingId, CPId)
                 VALUES(?,?) '''
 
 ADD_LANGU = ''' INSERT INTO Langs(Lang)
@@ -186,20 +191,68 @@ ADD_LANGU = ''' INSERT INTO Langs(Lang)
 ADD_LANGT = ''' INSERT INTO ThingsLangs(ThingId, LId)
                 VALUES(?,?) '''                 
 
-CHK_CPATT = ''' SELECT  CPId, Target, Replace 
+CHK_CPATR = ''' SELECT  * 
                 FROM CleanPatterns
                 WHERE Target=? AND Replace=? '''
 
-CHK_CPATR = ''' SELECT  ThingId, CPId 
+CHK_CPATT = ''' SELECT  *
                 FROM ThingsCleanPatterns
                 WHERE  ThingId=? AND CPId=? '''
 
-CHK_LANGU = ''' SELECT  LId 
+CHK_LANGU = ''' SELECT  *
                 FROM Langs
                 WHERE Lang=? '''
 
-CHK_LANGT = ''' SELECT  ThingId, LId 
+CHK_LANGT = ''' SELECT  *
                 FROM ThingsLangs
                 WHERE ThingId=? AND  LId=?'''  
 
-##   TODO: LANGUAGES TABLE AND LTHING
+"""
+Garbage
+"""
+CHK_GARB = ''' SELECT *
+               FROM Garbage
+               WHERE Garbage=? AND Replace =?'''
+
+ADD_GARB = ''' INSERT INTO Garbage(Garbage, Replace)
+               VALUES(?,?) '''
+
+"""
+Gatbage/Thing
+"""
+CHK_GARB = ''' SELECT *
+               FROM GarbageTh
+               WHERE ThingId=? AND Line=?  AND Position=?'''
+
+ADD_GARB = ''' INSERT INTO Garbage(GarbageId, ThingId, Line, Position)
+               VALUES(?,?,?,?) '''
+
+
+
+"""
+TypeCatalogue
+"""
+CHK_TYPE = ''' SELECT *
+               FROM TypeCatalogue
+               WHERE Type=? '''
+
+ADD_TYPE = ''' INSERT INTO TypeCatalogue(Type)
+               VALUES(?) '''
+
+"""
+TokenCatalogue
+"""
+CHK_TOKE = ''' SELECT *
+               FROM TokenCatalog
+               WHERE ThingId=? AND Line=?  AND InitialP=?'''
+
+ADD_TOKE = ''' INSERT INTO  TokenCatalog(ThingId, TypeId, Form, Line, InitialP, FinalP)
+               VALUES(?,?,?,?,?) '''
+
+
+"""
+Get thing properties
+"""
+GET_CPATT = """ SELECT *
+                FROM CleanPatterns
+                INNER JOIN B on B.f = A.f;"""

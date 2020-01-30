@@ -7,6 +7,9 @@ from urllib.request import pathname2url
 import sys
 sys.path.append(path.join(path.dirname(__file__), '../..'))
 from manzanares.thing.db_querys import * 
+from manzanares.text_preproc.chunkreader import ChunkReader
+from manzanares.text_preproc.text_preprocess import normalize_txt, split_sentence
+
 
 logging.basicConfig(filename="/tmp/thing_corp.log",
                     level=logging.DEBUG,
@@ -34,6 +37,9 @@ class thing_corp():
         self.name = name
         self.db_folder = db_folder
         self.file = '{}/{}.sqlite'.format(self.db_folder,self.name)
+
+
+
         
         if path.isfile(self.file):
             logging.info('Database {} already exists, checking and loading it.'.format(self.name))
@@ -53,13 +59,14 @@ class thing_corp():
 
     def CreateDbStruc(self):
         self.db_cur.execute(cretable_base)
+        self.db_cur.execute(cretable_garb)
+        self.db_cur.execute(cretable_gart)
         self.db_cur.execute(cretable_lang)
         self.db_cur.execute(cretable_thil)
         self.db_cur.execute(cretable_cpat)
         self.db_cur.execute(cretable_thcp)
         self.db_cur.execute(cretable_thcp)
         self.db_cur.execute(type_cataloge)
-        self.db_cur.execute(cretable_thty)
         self.db_cur.execute(token_catalog)
         self.db_con.commit()
 
@@ -112,7 +119,7 @@ class thing_corp():
                 logging.info("{} Thing whit the same file, tokens and gaps already exists, checking status".format(name))
                 self.db_cur.execute(CHK_THING, [ThingValues[val] for val in [0,2,3,7,8]])
                 resultt  = self.db_cur.fetchone()
-                if  resultt:       
+                if  resultt: 
                     ThingId = resultt[0]
                     Finished = resultt[15]
                     if Finished == True:
@@ -121,23 +128,27 @@ class thing_corp():
                 logging.info(e)
                 raise e
 
+                       
 
         for pattern in cleanpatt:
-                self.db_cur.execute(CHK_CPATT, pattern)
+                self.db_cur.execute(CHK_CPATR, pattern)
                 resulta = self.db_cur.fetchone()
                 if resulta:
                     cpattid = resulta[0]
-                    self.db_cur.execute(CHK_CPATR, (ThingId, cpattid))
+                    self.db_cur.execute(CHK_CPATT, (ThingId, cpattid))
                     resultb = self.db_cur.fetchone()
                     if resultb == None:
-                        self.db_cur.execute(ADD_CPATR, (ThingId, cpattid))
+                        self.db_cur.execute(ADD_CPATT, (ThingId, cpattid))
                         self.db_con.commit()
                 else:               
-                    self.db_cur.execute(ADD_CPATT, pattern)
+                    self.db_cur.execute(ADD_CPATR, pattern)
                     self.db_con.commit()
                     cpattid = self.db_cur.lastrowid
-                    self.db_cur.execute(ADD_CPATR, (ThingId,cpattid))
+                    self.db_cur.execute(ADD_CPATT, (ThingId,cpattid))
                     self.db_con.commit()
+
+
+
 
         for language in languages:
                 self.db_cur.execute(CHK_LANGU, [language])
@@ -157,11 +168,38 @@ class thing_corp():
                     self.db_con.commit()
 
 
-    def RecoverThing(self):
-        pass
 
-    def ProcessTextThing(self):
-        pass
+        Check =  "SELECT * FROM sqlite_master WHERE type ='Propiedad'"
+        self.db_cur.execute(Check)
+        result = self.db_cur.fetchall()
+        print(">>>>>>>-------\n{}\n------<<<<<<".format(result))
+
+
+    """def GetThing(self, ThingID)
+        self.db_cur.execute(CHK_THING, [ThingValues[val] for val in [0,2,3,7,8]])
+        resultt  = self.db_cur.fetchone()
+        
+
+        ThigId = resultt[0]
+        Name = resultt[1]
+        Description = resultt[2]
+        TFolder = resultt[3]
+        TFile = resultt[4]
+        Encoding  = resultt[5]
+        SBreak = resultt[6]
+        LBreak = resultt[7]
+        TokenCount = resultt[8] 
+        TypeCount = resultt[9]
+        LastProcecedToken = resultt[10]
+        LastProcecedSentence = resultt[11]
+        LastProcecedLine = resultt[12]
+        TokensAre = resultt[13]
+        Gap = resultt[14]
+        Finished = resultt[15]
+
+
+    def ProcessTextThing(self, name):
+        self.db_cur.execute(CHK_THING, [ThingValues[val] for val in [0,2,3,7,8]])"""
 
 
     
