@@ -170,6 +170,7 @@ class thing():
 
 
 
+
     def create_struct(self):
         self.db_cur.execute(CRE_MASTER)
         self.db_cur.execute(CRE_LANGU)
@@ -254,7 +255,7 @@ class thing():
                     return True
                 else:
                     diference = list(set(check_tuple) - set(master_data[1:8])) 
-                    raise AssertionError(diference)
+                    raise AssertionError(check_tuple, "\n", master_data[1:8])
             else:
                 raise AssertionError(e)
 
@@ -280,8 +281,10 @@ class thing():
 
 
     def process_text(self):
-        for chunk in ChunkReader("manzanares/test/lorem.txt",end=r"[\n{1:}]"):
-            pass
+        f = "{}/{}".format(self.tfolder,self.tfile)
+        for chunk in ChunkReader(f,end=r"[\n{1:}]"):
+            normal=normalize_txt(chunk, self.cleanpatt)
+            print(normal)
 
 
     def Disconnect(self):

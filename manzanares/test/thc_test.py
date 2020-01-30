@@ -9,11 +9,11 @@ from manzanares.thing.thing import thing
 
 def test_master_block(tmpdir_factory):
     tmp_folder = tmpdir_factory.mktemp("data")
-    thing1 = thing('Name', 'Description', 'TFolder', 'TFile', 'UTF-8', 'SentenceBreak', 'LineBreak',
+    thing1 = thing('Name', 'Description', 'manzanares/test', 'lorem.txt', 'UTF-8', 'SentenceBreak', 'LineBreak',
                      ['L1','L2'], [(r"\n{1,}",r"\n"),(r"[\!\¡\,]","")],
                    db_folder=tmp_folder)
     thing1.Disconnect()
-    thing2 = thing('Name', 'Description', 'TFolder', 'TFile', 'UTF-8', 'SentenceBreak', 'LineBreak',
+    thing2 = thing('Name', 'Description', 'manzanares/test', 'lorem.txt', 'UTF-8', 'SentenceBreak', 'LineBreak',
                     ['L2','L1'], [(r"\n{1,}",r"\n"),(r"[\!\¡\,]","")],
                    db_folder=tmp_folder)
     thing2.Disconnect()
