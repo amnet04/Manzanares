@@ -21,6 +21,7 @@ CRE_MASTER += "TFile TEXT NOT NULL, "
 CRE_MASTER += "Encoding TEXT NOT NULL CHECK(Encoding IN ('ASCII', 'UTF-8')), "
 CRE_MASTER += "SentenceBreak TEXT, "
 CRE_MASTER += "LineBreak TEXT, "
+CRE_MASTER += "WordBreak TEXT, "
 CRE_MASTER += "TokenCount INTEGER NOT NULL, "
 CRE_MASTER += "TypeCount INTEGER NOT NULL,"
 CRE_MASTER += "LastProcecedToken INTEGER NOT NULL, "
@@ -40,19 +41,19 @@ Add Master Row
 """
 ADD_MASTER =  "INSERT INTO MASTER("
 ADD_MASTER += "Name, Description, TFolder, TFile, Encoding, SentenceBreak, LineBreak,"
-ADD_MASTER += "TokenCount, TypeCount, LastProcecedToken, LastProcecedSentence, "
+ADD_MASTER += "WordBreak, TokenCount, TypeCount, LastProcecedToken, LastProcecedSentence, "
 ADD_MASTER += "LastProcecedLine)"
-ADD_MASTER += "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+ADD_MASTER += "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 """
 Test Insert into Master (Only for test)
 """
 INS_MASTER =  "INSERT INTO MASTER("
-INS_MASTER += "Name, Description, TFolder, TFile, Encoding, SentenceBreak, LineBreak,"
+INS_MASTER += "Name, Description, TFolder, TFile, Encoding, SentenceBreak, LineBreak, WordBreak,"
 INS_MASTER += "TokenCount, TypeCount, LastProcecedToken, LastProcecedSentence, "
 INS_MASTER += "LastProcecedLine,  Finished )"
 INS_MASTER += "VALUES('Name', 'Description', 'TFolder', 'TFile', 'UTF-8', 'SentenceBreak', 'LineBreak',"
-INS_MASTER += "'TokenCount', 'TypeCount', 'LastProcecedToken', 'LastProcecedSentence', "
+INS_MASTER += "'WordBreak', 'TokenCount', 'TypeCount', 'LastProcecedToken', 'LastProcecedSentence', "
 INS_MASTER += "'LastProcecedLine', 'True')"
 
 """
@@ -163,22 +164,51 @@ ADD_WORD = "INSERT INTO Words(Words) VALUES(?)"
 ******************************************* Cleaned table  *******************************
 """
 CRE_GARBAGE =  "CREATE TABLE IF NOT EXISTS Cleaned("
-CRE_GARBAGE += "Id INTEGER NOT NULL, "
+CRE_GARBAGE += "Id INTEGER PRIMARY KEY, "
 CRE_GARBAGE += "Garbage TEXT NOT NULL, "
 CRE_GARBAGE += "Replace TEXT NOT NULL, "
 CRE_GARBAGE += "CONSTRAINT unq UNIQUE (Garbage, Replace))"
 
 """
-Get content of  Words Table
+Get content of  garbage Table
 """
 GET_GARBAGE = "SELECT * FROM Cleaned"
 
 """
-Get symbol id
+Get garbage id
 """
 GET_GAR_ID = "SELECT Id FROM Cleaned WHERE Garbage=? AND Replace=?"
 
 """
-ADD symbol
+ADD garbage
 """
-ADD_GARBAGE = "INSERT INTO Cleaned(Garbage, Replace) VALUES(?, ?)"
+ADD_GARBAGE = "INSERT INTO Cleaned(Garbage, Replace) VALUES(?,?)"
+
+
+"""
+******************************************* Cleaned Token table  *******************************
+"""
+CRE_GARBTOK =  "CREATE TABLE IF NOT EXISTS CleanTokens("
+CRE_GARBTOK += "GarId INTEGER NOT NULL, "
+CRE_GARBTOK += "Line INTEGER NOT NULL, "
+CRE_GARBTOK += "Sentence INTEGER NOT NULL,"
+CRE_GARBTOK += "IPos INTEGER NOT NULL, "
+CRE_GARBTOK += "FPos INTEGER NOT NULL, "
+CRE_GARBTOK += "FOREIGN KEY(GarId)  REFERENCES Cleaned(Id),"
+CRE_GARBTOK += "CONSTRAINT unq UNIQUE (Line,Sentence,IPos,FPos))" 
+
+
+"""
+Get content of garbage table
+"""
+GET_GARBTOK = "SELECT * FROM CleanTokens"
+
+"""
+Get garbage id
+"""
+GET_GATO_ID = "SELECT Id FROM Cleaned WHERE Garbage=? AND Replace=?"
+
+"""
+ADD garbage
+"""
+ADD_GARBAGE = "INSERT INTO Cleaned(Garbage, Replace) VALUES(?,?)"
