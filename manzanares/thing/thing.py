@@ -288,55 +288,88 @@ class thing():
             raise ValueError("Los patrones de limpieza introducidos no son iguales a los registrados o no tienen el mismo orden")
 
 
+    def add_word(self, word):
+        #print("word ------------------------------####", word)
+        try:
+            self.db_cur.execute(ADD_WORD, [word.lower()])
+            self.db_con.commit()
+        except sqlite3.IntegrityError as e:
+            if not "UNIQUE constraint failed: Words.Word" in "{}".format(e):
+                raise e 
+
+        self.db_cur.row_factory = lambda cursor, row: (row[0])
+        self.db_cur.execute(GET_WORD_ID, [word])
+        word_id = self.db_cur.fetchone()
+        word = ""
+        return word_id
+
+    def add_symbol(self, symbol):
+        try:
+            self.db_cur.execute(ADD_SYMBOL, symbol.lower())
+            self.db_con.commit()
+        except sqlite3.IntegrityError as e:
+            if not "UNIQUE constraint failed: Symbols.Symbol" in "{}".format(e):
+                 raise e   
+
+        self.db_cur.row_factory = lambda cursor, row: (row[0])
+        self.db_cur.execute(GET_SYM_ID, symbol)
+        symbol_id = self.db_cur.fetchone()
+        return symbol_id
+
+    def add_garbage(self, garbage, replace):
+        try:
+            self.db_cur.execute(ADD_GARBAGE, [garbage, replace])
+            self.db_con.commit()
+        except sqlite3.IntegrityError as e:
+            if not "UNIQUE constraint failed: Cleaned.Garbage, Cleaned.Replace" in "{}".format(e):
+                 raise e
+
+        self.db_cur.row_factory = lambda cursor, row: (row[0])
+        self.db_cur.execute(GET_GAR_ID, [garbage, replace] )
+        garbage_id = self.db_cur.fetchone()
+        return garbage_id
+
     def process_text(self):
         f = "{}/{}".format(self.tfolder,self.tfile)
         chunk_counter = 1
         for chunk in ChunkReader(f,end=r"[\n{1:}]"):
             sentences = re.split(self.sentencebreak,chunk)
             normals = [normalize_txt(x, self.cleanpatt) for x in sentences]
+
             for enum, sentence in enumerate(normals):
-                if sentence[1] != []:
-                    for cleaned in sentence[1]:
-                        try:
-                            self.db_cur.execute(ADD_GARBAGE, [cleaned[1], cleaned[2]])
-                            self.db_con.commit()
-                        except sqlite3.IntegrityError as e:
-                            if not "UNIQUE constraint failed: Cleaned.Garbage, Cleaned.Replace" in "{}".format(e):
-                                 raise e
+                word =  ""
+                
+                for symbol in sentence[0]:
 
-                        self.db_cur.row_factory = lambda cursor, row: (row[0])
-                        self.db_cur.execute(GET_GAR_ID, [cleaned[1], cleaned[2]] )
-                        garbage_id = self.db_cur.fetchone()
+                    if re.match(self.linebreak, symbol):
+                        gar_id = self.add_garbage(symbol, "<IsLineBreak>")
+                        if word != "":
+                            word_id = self.add_word(word)
+                        word = ""
 
+                    elif re.match(self.sentencebreak, symbol):
+                        gar_id = self.add_garbage(symbol, "<IsSentenceBreak>")
+                        if word != "":
+                            word_id = self.add_word(word)
+                        word = ""
 
-                elif sentence[1] == [] and re.match(self.linebreak, sentence[0]):
-                    try:
-                        self.db_cur.execute(ADD_GARBAGE, [sentence[0], "<IsLineBreak>"])
-                        self.db_con.commit()
-                    except sqlite3.IntegrityError as e:
-                        if not "UNIQUE constraint failed: Cleaned.Garbage, Cleaned.Replace" in "{}".format(e):
-                             raise e   
+                    elif re.match(self.wordbreak, symbol):
+                        gar_id = self.add_garbage(symbol, "<IsWordBreak>")
+                        if word != "":
+                            word_id = self.add_word(word)
+                        word = ""
+                        
+                    else:
+                        symbol_id = self.add_symbol(symbol)
+                        word += symbol
 
-                    self.db_cur.row_factory = lambda cursor, row: (row[0])
-                    self.db_cur.execute(GET_GAR_ID, [sentence[0], "<IsLineBreak>"] )
-                    garbage_id = self.db_cur.fetchone()
+                        #print("word ------------------------------>>>>", word)
 
-                elif sentence[1] == [] and re.match(self.sentencebreak, sentence[0]):
-                    try:
-                        self.db_cur.execute(ADD_GARBAGE, [sentence[0], "<IsSentenceBreak>"])
-                        self.db_con.commit()
-                    except sqlite3.IntegrityError as e:
-                        if not "UNIQUE constraint failed: Cleaned.Garbage, Cleaned.Replace" in "{}".format(e):
-                             raise e   
+                if word != "":
+                    word_id = self.add_word(word)
 
-                    self.db_cur.row_factory = lambda cursor, row: (row[0])
-                    self.db_cur.execute(GET_GAR_ID, [sentence[0], "<IsSentenceBreak>"] )
-                    garbage_id = self.db_cur.fetchone()
-
-                else:
-                    for symbol in sentence[0]:
-                        if re.match(self.wordbreak, symbol):
-
+                for gar in sentence[1]:
+                    gar_id = self.add_garbage(gar[1], gar[2])
 
 
             chunk_counter+=1

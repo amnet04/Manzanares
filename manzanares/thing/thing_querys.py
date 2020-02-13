@@ -132,7 +132,10 @@ GET_SYM_ID = "SELECT * FROM Symbols WHERE Symbol=?"
 """
 ADD symbol
 """
-ADD_SYMBOL = "INSERT INTO Symbols(Symbols) VALUES(?)"
+ADD_SYMBOL = "INSERT INTO Symbols(Symbol) VALUES(?)"
+
+
+
 
 
 
@@ -156,7 +159,7 @@ GET_WORD_ID = "SELECT Id FROM Words WHERE Word=?"
 """
 ADD symbol
 """
-ADD_WORD = "INSERT INTO Words(Words) VALUES(?)"
+ADD_WORD = "INSERT INTO Words(Word) VALUES(?)"
 
 
 
