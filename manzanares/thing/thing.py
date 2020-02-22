@@ -8,7 +8,7 @@ from urllib.request import pathname2url
 
 import sys
 sys.path.append(path.join(path.dirname(__file__), '../..'))
-from manzanares.thing.thing_querys import * 
+from manzanares.thing.thing_querys import *
 from manzanares.text_preproc.chunkreader import ChunkReader
 from manzanares.text_preproc.text_preprocess import normalize_txt, split_sentence
 
@@ -22,29 +22,29 @@ class thing():
 
     def __init__(self,
                  name,
-                 description = False, 
-                 tfolder = False, 
+                 description = False,
+                 tfolder = False,
                  tfile = False,
                  encoding = False,
                  sentencebreak = False,
                  linebreak = False,
-                 wordbreak = False,  
+                 wordbreak = False,
                  languages = False,
-                 cleanpatt= False, 
+                 cleanpatt= False,
                  db_folder="../../dbases/"):
 
         self.name  = name
         self.db_folder = db_folder
         self.db_file = '{}/{}.sqlite'.format(self.db_folder,self.name)
 
-        dict = {"description":description, 
-                "tfolder":tfolder, 
-                "tfile":tfile, 
-                "encoding":encoding, 
-                "sentencebreak":sentencebreak, 
-                "linebreak":linebreak, 
-                "wordbreak":linebreak, 
-                "language":languages, 
+        dict = {"description":description,
+                "tfolder":tfolder,
+                "tfile":tfile,
+                "encoding":encoding,
+                "sentencebreak":sentencebreak,
+                "linebreak":linebreak,
+                "wordbreak":wordbreak,
+                "language":languages,
                 "cleanpatt":cleanpatt}
 
         if  description == tfolder == tfile == encoding == sentencebreak == linebreak  == wordbreak == languages == cleanpatt == False:
@@ -67,7 +67,7 @@ class thing():
                 self.sentencebreak = sentencebreak
                 self.linebreak = linebreak
                 self.wordbreak = wordbreak
-                self.tokencount = 0 
+                self.tokencount = 0
                 self.typecount = 0
                 self.lastprocecedtoken = 0
                 self.lastprocecedsentence = 0
@@ -79,9 +79,9 @@ class thing():
                 self.load_db()
 
             else:
-                raise ValueError("No  setees los parametros {}, o termina de setear {}".format(setted_values, values_in_false)) 
+                raise ValueError("No  setees los parametros {}, o termina de setear {}".format(setted_values, values_in_false))
 
-       
+
 
 
     def open_db(self, from_file=False):
@@ -95,19 +95,19 @@ class thing():
             raise IntegrityError("El archivo no existe")
         else:
             self.create_db()
-        
+
 
     def create_db(self):
         logging.info('Creating database {} in {}'.format(self.name, self.db_folder))
         self.db_con = sqlite3.connect(self.db_file)
         self.db_cur = self.db_con.cursor()
-        
+
         self.create_struct()
-        
-        self.db_cur.execute(ADD_MASTER, [self.name, 
-                                         self.description, 
-                                         self.tfolder, 
-                                         self.tfile, 
+
+        self.db_cur.execute(ADD_MASTER, [self.name,
+                                         self.description,
+                                         self.tfolder,
+                                         self.tfile,
                                          self.encoding,
                                          self.sentencebreak,
                                          self.linebreak,
@@ -143,7 +143,7 @@ class thing():
 
 
     def load_db(self):
-        self.open_db()        
+        self.open_db()
         self.check_master()
         self.check_langs()
         self.check_cpattr()
@@ -162,15 +162,15 @@ class thing():
         cpatt = self.db_cur.fetchall()
 
         self.__init__(self.name,
-                      description = master[2], 
-                      tfolder = master[3], 
+                      description = master[2],
+                      tfolder = master[3],
                       tfile = master[4],
                       encoding = master[5],
                       sentencebreak = master[6],
                       linebreak = master[7],
-                      wordbreak = master[8],  
+                      wordbreak = master[8],
                       languages = langs,
-                      cleanpatt= cpatt, 
+                      cleanpatt= cpatt,
                       db_folder=self.db_folder)
 
 
@@ -181,47 +181,68 @@ class thing():
         self.db_cur.execute(CRE_LANGU)
         self.db_cur.execute(CRE_CLEPT)
         self.db_cur.execute(CRE_SYMBOL)
+        self.db_cur.execute(CRE_SYMTOK)
         self.db_cur.execute(CRE_WORDS)
+        self.db_cur.execute(CRE_WORTOK)
         self.db_cur.execute(CRE_GARBAGE)
+        self.db_cur.execute(CRE_GARBTOK)
         self.db_con.commit()
 
 
     def check_struct(self):
 
-        expected_struct = { "MASTER": [(0, 'Id', 'INTEGER', 0, None, 1), 
-                                        (1, 'Name', 'TEXT', 1, None, 0), 
-                                        (2, 'Description', 'TEXT', 1, None, 0), 
-                                        (3, 'TFolder', 'TEXT', 1, None, 0), 
-                                        (4, 'TFile', 'TEXT', 1, None, 0), 
-                                        (5, 'Encoding', 'TEXT', 1, None, 0), 
-                                        (6, 'SentenceBreak', 'TEXT', 0, None, 0), 
+        expected_struct = { "MASTER": [(0, 'Id', 'INTEGER', 0, None, 1),
+                                        (1, 'Name', 'TEXT', 1, None, 0),
+                                        (2, 'Description', 'TEXT', 1, None, 0),
+                                        (3, 'TFolder', 'TEXT', 1, None, 0),
+                                        (4, 'TFile', 'TEXT', 1, None, 0),
+                                        (5, 'Encoding', 'TEXT', 1, None, 0),
+                                        (6, 'SentenceBreak', 'TEXT', 0, None, 0),
                                         (7, 'LineBreak', 'TEXT', 0, None, 0),
-                                        (8, 'WordBreak', 'TEXT', 0, None, 0), 
-                                        (9, 'TokenCount', 'INTEGER', 1, None, 0), 
-                                        (10, 'TypeCount', 'INTEGER', 1, None, 0), 
-                                        (11, 'LastProcecedToken', 'INTEGER', 1, None, 0), 
-                                        (12, 'LastProcecedSentence', 'INTEGER', 1, None, 0), 
-                                        (13, 'LastProcecedLine', 'INTEGER', 1, None, 0), 
+                                        (8, 'WordBreak', 'TEXT', 0, None, 0),
+                                        (9, 'TokenCount', 'INTEGER', 1, None, 0),
+                                        (10, 'TypeCount', 'INTEGER', 1, None, 0),
+                                        (11, 'LastProcecedToken', 'INTEGER', 1, None, 0),
+                                        (12, 'LastProcecedSentence', 'INTEGER', 1, None, 0),
+                                        (13, 'LastProcecedLine', 'INTEGER', 1, None, 0),
                                         (14, 'Finished', 'INTEGER', 1, '0', 0)],
 
 
                             "Langs": [(0, 'Lang', 'TEXT', 1, None, 1)],
 
-                            "CleanPatterns": [(0, 'Target', 'TEXT', 1, None, 1), 
+                            "CleanPatterns": [(0, 'Target', 'TEXT', 1, None, 1),
                                               (1, 'Replace', 'TEXT', 1, None, 0)],
 
-                            "Symbols": [(0, 'Id', 'INTEGER', 1, None, 1), 
+                            "Symbols": [(0, 'Id', 'INTEGER', 1, None, 1),
                                         (1, 'Symbol', 'TEXT', 1, None, 0)],
 
-                            "Words": [(0, 'Id', 'INTEGER', 1, None, 1), 
+                            "SymbolTokens":  [(0, 'SymId', 'INTEGER', 1, None, 0),
+                                             (1, 'Form', 'TEXT', 1, None, 0),
+                                             (2, 'Chunk', 'INTEGER', 1, None, 0),
+                                             (3, 'Sentence', 'INTEGER', 1, None, 0),
+                                             (4, 'SentencePos', 'INTEGER', 1, None, 0)],
+
+                            "Words": [(0, 'Id', 'INTEGER', 1, None, 1),
                                       (1, 'Word', 'TEXT', 1, None, 0)],
 
-                            "Cleaned":[(0, 'Id', 'INTEGER', 0, None, 1), 
-                                       (1, 'Garbage', 'TEXT', 1, None, 0), 
-                                       (2, 'Replace', 'TEXT', 1, None, 0)]
+                            "WordTokens": [(0, 'WordId', 'INTEGER', 1, None, 0), 
+                                           (1, 'Form', 'TEXT', 1, None, 0), 
+                                           (2, 'Chunk', 'INTEGER', 1, None, 0), 
+                                           (3, 'Sentence', 'INTEGER', 1, None, 0), 
+                                           (4, 'SentenceposStart', 'INTEGER', 1, None, 0), 
+                                           (5, 'SentenceposEnd', 'INTEGER', 1, None, 0)],
 
+                            "Cleaned": [(0, 'Id', 'INTEGER', 0, None, 1),
+                                        (1, 'Garbage', 'TEXT', 1, None, 0),
+                                        (2, 'Replace', 'TEXT', 1, None, 0)],
 
+                            "CleanTokens":[(0, 'GarId', 'INTEGER', 1, None, 0),
+                                           (1, 'Chunk', 'INTEGER', 1, None, 0),
+                                           (2, 'Sentence', 'INTEGER', 1, None, 0),
+                                           (3, 'Start', 'INTEGER', 1, None, 0),
+                                           (4, 'End', 'INTEGER', 1, None, 0)]
         }
+
         self.db_cur.row_factory = lambda cursor, row: row[0]
         self.db_cur.execute(CHK_ALLTBL)
         db_tables = self.db_cur.fetchall()
@@ -235,7 +256,7 @@ class thing():
                 if table_str != expected_struct[key]:
                     diference = list(set(expected_struct[key]) - set(table_str))
                     raise AssertionError("Table {} doesnt fit:\n {}".format(key, table_str))
-                
+
             logging.info("Database {} checked".format(self.name))
             return True
         else:
@@ -250,10 +271,10 @@ class thing():
         except sqlite3.IntegrityError as e:
             if "CHECK constraint failed: MASTER" in "{}".format(e):
                 self.db_cur.execute(GET_MASTER)
-                check_tuple = [self.name, 
-                               self.description, 
-                               self.tfolder, 
-                               self.tfile, 
+                check_tuple = [self.name,
+                               self.description,
+                               self.tfolder,
+                               self.tfile,
                                self.encoding,
                                self.sentencebreak,
                                self.linebreak,
@@ -262,7 +283,7 @@ class thing():
                 if check_tuple == master_data[1:9]:
                     return True
                 else:
-                    diference = list(set(check_tuple) - set(master_data[1:9])) 
+                    diference = list(set(check_tuple) - set(master_data[1:9]))
                     raise AssertionError(check_tuple, "\n", master_data[1:9])
             else:
                 raise AssertionError(e)
@@ -288,20 +309,6 @@ class thing():
             raise ValueError("Los patrones de limpieza introducidos no son iguales a los registrados o no tienen el mismo orden")
 
 
-    def add_word(self, word):
-        #print("word ------------------------------####", word)
-        try:
-            self.db_cur.execute(ADD_WORD, [word.lower()])
-            self.db_con.commit()
-        except sqlite3.IntegrityError as e:
-            if not "UNIQUE constraint failed: Words.Word" in "{}".format(e):
-                raise e 
-
-        self.db_cur.row_factory = lambda cursor, row: (row[0])
-        self.db_cur.execute(GET_WORD_ID, [word])
-        word_id = self.db_cur.fetchone()
-        word = ""
-        return word_id
 
     def add_symbol(self, symbol):
         try:
@@ -309,12 +316,58 @@ class thing():
             self.db_con.commit()
         except sqlite3.IntegrityError as e:
             if not "UNIQUE constraint failed: Symbols.Symbol" in "{}".format(e):
-                 raise e   
+                 raise e
 
         self.db_cur.row_factory = lambda cursor, row: (row[0])
         self.db_cur.execute(GET_SYM_ID, symbol)
         symbol_id = self.db_cur.fetchone()
         return symbol_id
+
+    def add_symbol_token(self, symbol_id, symbol,  chunk, sentence, pos_in_sen):
+        try:
+            self.db_cur.execute(ADD_SYMTOK, [symbol_id, symbol, chunk, sentence, pos_in_sen])
+            self.db_con.commit()
+        except sqlite3.IntegrityError as e:
+            if not "UNIQUE constraint failed: Symbols.Symbol" in "{}".format(e):
+                 raise e
+
+        self.db_cur.row_factory = None
+        self.db_cur.execute(GET_STO_ID, [chunk, sentence, pos_in_sen])
+        symbol_tok = self.db_cur.fetchone()
+        return symbol_tok
+
+    def add_word(self, word):
+        #print("word ------------------------------####", word)
+        try:
+            self.db_cur.execute(ADD_WORD, [word.lower()])
+            self.db_con.commit()
+        except sqlite3.IntegrityError as e:
+            if not "UNIQUE constraint failed: Words.Word" in "{}".format(e):
+                raise e
+
+        self.db_cur.row_factory = lambda cursor, row: (row[0])
+        self.db_cur.execute(GET_WORD_ID, [word])
+        word_id = self.db_cur.fetchone()
+        word = ""
+        return word_id
+
+    def add_word_token(self, word_id, word,  chunk, sentence, pos_start, pos_end):
+        #print("pre: ",word)
+        try:
+            #print("try: ", word)
+            if word == word.lower():
+                word = ""
+            self.db_cur.execute(ADD_WORTOK, [word_id, word,  chunk, sentence, pos_start, pos_end])
+            self.db_con.commit()
+        except sqlite3.IntegrityError as e:
+            if not "UNIQUE constraint failed: Symbols.Symbol" in "{}".format(e):
+                 raise e
+
+        self.db_cur.row_factory = None
+        self.db_cur.execute(GET_WTO_ID, [chunk, sentence, pos_start])
+        symbol_tok = self.db_cur.fetchone()
+        return symbol_tok
+
 
     def add_garbage(self, garbage, replace):
         try:
@@ -329,61 +382,85 @@ class thing():
         garbage_id = self.db_cur.fetchone()
         return garbage_id
 
+    def add_garbage_token(self, garbage_id, chunk, sentence, start, end):
+        try:
+            self.db_cur.execute(ADD_GARBTOK, [garbage_id, chunk, sentence, start, end])
+            self.db_con.commit()
+        except sqlite3.IntegrityError as e:
+            if not "UNIQUE constraint failed: Symbols.Symbol" in "{}".format(e):
+                 raise e
+
+        self.db_cur.row_factory = None
+        self.db_cur.execute(GET_GARBTOK, [chunk, sentence, start, end])
+        garbage_tok = self.db_cur.fetchone()
+
+        return garbage_tok
+
     def process_text(self):
         f = "{}/{}".format(self.tfolder,self.tfile)
-        chunk_counter = 1
-        for chunk in ChunkReader(f,end=r"[\n{1:}]"):
+        for chunk_counter, chunk in enumerate(ChunkReader(f,end=r"[\n]{1,}")):
+            print(chunk)
             sentences = re.split(self.sentencebreak,chunk)
             normals = [normalize_txt(x, self.cleanpatt) for x in sentences]
 
             for enum, sentence in enumerate(normals):
+                print("sentence:::   ",sentence)
                 word =  ""
-                
-                for symbol in sentence[0]:
+
+                for symb_enum, symbol in enumerate(sentence[0]):
+                    simbol = str(symbol)
 
                     if re.match(self.linebreak, symbol):
+                        #print("linebreak",  "word = ", word)
                         gar_id = self.add_garbage(symbol, "<IsLineBreak>")
+                        gartok_id = self.add_garbage_token(gar_id, chunk_counter, enum, symb_enum, symb_enum+1)
                         if word != "":
                             word_id = self.add_word(word)
+                            word_token = self.add_word_token(word_id, word, chunk_counter, enum, symb_enum-len(word), symb_enum )
                         word = ""
 
                     elif re.match(self.sentencebreak, symbol):
                         gar_id = self.add_garbage(symbol, "<IsSentenceBreak>")
+                        #print("sentencebreak", "word = ", word)
+                        gartok_id = self.add_garbage_token(gar_id, chunk_counter, enum, symb_enum, symb_enum+1)
                         if word != "":
                             word_id = self.add_word(word)
+                            word_token = self.add_word_token(word_id, word, chunk_counter, enum, symb_enum-len(word), symb_enum )
                         word = ""
 
                     elif re.match(self.wordbreak, symbol):
+                        #print("wordbreak: ",  "word = ", word)
                         gar_id = self.add_garbage(symbol, "<IsWordBreak>")
+                        gartok_id = self.add_garbage_token(gar_id, chunk_counter, enum, symb_enum, symb_enum+1)
                         if word != "":
                             word_id = self.add_word(word)
+                            word_token = self.add_word_token(word_id, word, chunk_counter, enum, symb_enum-len(word), symb_enum )
                         word = ""
-                        
+
                     else:
+                        #print("wordgrow ",  "word = ", word)
                         symbol_id = self.add_symbol(symbol)
+                        symbol_tok = self.add_symbol_token(symbol_id,
+                                                              symbol,
+                                                              chunk_counter,
+                                                              enum,
+                                                              symb_enum)
                         word += symbol
 
-                        #print("word ------------------------------>>>>", word)
-
+                        
                 if word != "":
+                    #print("worddddd",  "word = ", word)
                     word_id = self.add_word(word)
+                    word_token = self.add_word_token(word_id, word, chunk_counter, enum, symb_enum-len(word), symb_enum )
 
                 for gar in sentence[1]:
                     gar_id = self.add_garbage(gar[1], gar[2])
+                    gartok_id = self.add_garbage_token(gar_id, chunk_counter, enum, gar[0][0], gar[0][1])
 
+        self.db_cur.execute(UPD_FINIS)
+        self.db_con.commit()
 
-            chunk_counter+=1
 
 
     def Disconnect(self):
         self.db_con.close()
-
-
-
-
-
-
-
-
-
-
