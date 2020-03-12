@@ -91,8 +91,6 @@ ADD Language
 ADD_LANGU = "INSERT INTO Langs(Lang) VALUES(?)"
 
 
-
-
 """
 ******************************************* Clean Patterns Table  *******************************
 """
@@ -150,7 +148,10 @@ CRE_SYMTOK += "FOREIGN KEY(SymId)  REFERENCES Symbols(Id))"
 """
 Get content of  Symbol Table
 """
-GET_ALLSTO = "SELECT * FROM SymbolTokens"
+GET_ALLSTO =  "SELECT  Form, Symbol, Chunk, Sentence, SentencePos FROM SymbolTokens "
+GET_ALLSTO += "INNER JOIN Symbols ON Symbols.Id = SymbolTokens.SymId WHERE Chunk = ?"
+GET_ALLSTO += "ORDER BY SymbolTokens.Chunk ASC, SymbolTokens.Sentence ASC, SymbolTokens.SentencePos ASC"
+
 
 """
 Get symbol id
@@ -170,11 +171,22 @@ Get all of one form
 GET_SF =  "SELECT * FROM SymbolTokens WHERE "
 GET_SF += "Form = ?"
 
+"""
+Get last chunk
+"""
+GET_LAST_CHUNK_STO  = "SELECT MAX(Chunk) from SymbolTokens"
+
+"""
+Get last sentence in chunk
+"""
+GET_LAST_SENTENCE_IN_CHUNK_STO = "SELECT MAX()"
+
 
 """
 ADD symbol
 """
 ADD_SYMTOK = "INSERT INTO SymbolTokens(SymId, Form, Chunk, Sentence, SentencePos) VALUES(?,?,?,?,?)"
+
 
 
 
@@ -218,7 +230,9 @@ CRE_WORTOK += "FOREIGN KEY(WordId)  REFERENCES Word(Id))"
 """
 Get content of  Symbol Table
 """
-GET_ALLWTO = "SELECT * FROM WordTokens"
+GET_ALLWTO = "SELECT  Form, Word, Chunk, Sentence, SentencePosStart FROM WordTokens "
+GET_ALLWTO += "INNER JOIN Words  ON Words.Id = WordTokens.WordId WHERE Chunk = ?"
+GET_ALLWTO += "ORDER BY WordTokens.Chunk ASC, WordTokens.Sentence ASC, WordTokens.SentencePosStart ASC"
 
 """
 Get symbol id
@@ -238,6 +252,10 @@ Get all of one form
 GET_WF =  "SELECT * FROM WordTokens WHERE "
 GET_WF += "Form = ?"
 
+"""
+Get las chunk
+"""
+GET_LAST_CHUNK_WTO  = "SELECT MAX(Chunk) from WordTokens"
 
 """
 ADD symbol
@@ -294,3 +312,10 @@ GET_GARBTOK = "SELECT * FROM CleanTokens WHERE Chunk=? AND Sentence=? And Start=
 ADD garbage
 """
 ADD_GARBTOK = "INSERT INTO  CleanTokens(GarId, Chunk, Sentence, Start, End) VALUES(?,?,?,?,?)"
+
+"""
+Get cleaned tokens
+"""
+GET_ALLGAR = "SELECT  Garbage, Replace, Sentence, Start, End FROM CleanTokens "
+GET_ALLGAR += "INNER JOIN Cleaned  ON Cleaned.Id = CleanTokens.GarId WHERE Chunk = ?"
+GET_ALLGAR += "ORDER BY CleanTokens.Chunk ASC, CleanTokens.Sentence ASC, CleanTokens.Start ASC, CleanTokens.End ASC"

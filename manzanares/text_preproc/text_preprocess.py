@@ -53,8 +53,15 @@ def normalize_txt(text,patterns):
             clean_text = re.sub(pattern[0], pattern[1], clean_text)
     return clean_text, cleaned
 
-def split_sentence(text, sbreak):
-    return(re.split(sbreak,text))
+def split_sentence(sbreak, text):
+    spl = re.compile(sbreak)
+    new_text = re.split(spl,text)
+    try:
+        new_text = new_text.remove('')
+    except:
+        pass
+    splitters = re.findall(spl,text)
+    return(new_text,splitters)
 
 def process_sentence(sentence, clean_p, alpha, token_base, gs):
     if clean_p:

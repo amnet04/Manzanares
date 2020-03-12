@@ -76,6 +76,9 @@ class thing():
                 self.cleanpatt = cleanpatt
                 self.finished = 0
 
+                self.text_file = "{}/{}".format(self.tfolder,self.tfile)
+                self.chunk_reader = ChunkReader(self.text_file,end=self.linebreak)
+
                 self.load_db()
 
             else:
@@ -92,7 +95,8 @@ class thing():
             self.db_cur = self.db_con.cursor()
             self.check_struct()
         elif from_file==True:
-            raise IntegrityError("El archivo no existe")
+            print("@@@@@@@ ", self.db_file)
+            raise IOError("El archivo {} no existe".format(self.db_file))
         else:
             self.create_db()
 
@@ -139,7 +143,7 @@ class thing():
                 else:
                     raise AssertionError(e)
 
-        self.process_text()
+        #todo verificar chunks
 
 
     def load_db(self):
@@ -172,8 +176,6 @@ class thing():
                       languages = langs,
                       cleanpatt= cpatt,
                       db_folder=self.db_folder)
-
-
 
 
     def create_struct(self):
@@ -319,17 +321,23 @@ class thing():
                  raise e
 
         self.db_cur.row_factory = lambda cursor, row: (row[0])
-        self.db_cur.execute(GET_SYM_ID, symbol)
+        self.db_cur.execute(GET_SYM_ID, symbol.lower())
         symbol_id = self.db_cur.fetchone()
         return symbol_id
 
     def add_symbol_token(self, symbol_id, symbol,  chunk, sentence, pos_in_sen):
         try:
+            if symbol == symbol.lower():
+                symbol = ""    
             self.db_cur.execute(ADD_SYMTOK, [symbol_id, symbol, chunk, sentence, pos_in_sen])
             self.db_con.commit()
         except sqlite3.IntegrityError as e:
             if not "UNIQUE constraint failed: Symbols.Symbol" in "{}".format(e):
-                 raise e
+                 print("***********************************************************************")
+                 print(symbol_id, symbol, chunk, sentence, pos_in_sen)  
+                 print("***********************************************************************")
+                 raise e  
+                 
 
         self.db_cur.row_factory = None
         self.db_cur.execute(GET_STO_ID, [chunk, sentence, pos_in_sen])
@@ -346,7 +354,7 @@ class thing():
                 raise e
 
         self.db_cur.row_factory = lambda cursor, row: (row[0])
-        self.db_cur.execute(GET_WORD_ID, [word])
+        self.db_cur.execute(GET_WORD_ID, [word.lower()])
         word_id = self.db_cur.fetchone()
         word = ""
         return word_id
@@ -397,70 +405,144 @@ class thing():
         return garbage_tok
 
     def process_text(self):
-        f = "{}/{}".format(self.tfolder,self.tfile)
-        for chunk_counter, chunk in enumerate(ChunkReader(f,end=r"[\n]{1,}")):
-            print(chunk)
-            sentences = re.split(self.sentencebreak,chunk)
-            normals = [normalize_txt(x, self.cleanpatt) for x in sentences]
+        for chunk in self.chunk_reader:
+            if chunk !="":      
+                sentences, splitters = split_sentence(self.sentencebreak,chunk[1])
+                if sentences:
+                    sentences_lens = [len(x) for x in sentences]
+                    normals = [normalize_txt(x, self.cleanpatt) for x in sentences]
 
-            for enum, sentence in enumerate(normals):
-                print("sentence:::   ",sentence)
-                word =  ""
+                if splitters:
+                    splitters_lens = [len(x) for x in splitters]
+                
 
-                for symb_enum, symbol in enumerate(sentence[0]):
-                    simbol = str(symbol)
+                for enum, sentence in enumerate(normals, start=0):
+                    #print("sentence:::   ",sentence)
+                    if enum < len(splitters):
+                        gar_id = self.add_garbage(splitters[enum], "<IsSentenceBreak>")
+                        gartok_id = self.add_garbage_token(gar_id, chunk[0], enum, sentences_lens[enum], splitters_lens[enum])
+                    
+                    word=""
+                    
+                    for symb_enum, symbol in enumerate(sentence[0]):
+                        simbol = str(symbol)
 
-                    if re.match(self.linebreak, symbol):
-                        #print("linebreak",  "word = ", word)
-                        gar_id = self.add_garbage(symbol, "<IsLineBreak>")
-                        gartok_id = self.add_garbage_token(gar_id, chunk_counter, enum, symb_enum, symb_enum+1)
-                        if word != "":
-                            word_id = self.add_word(word)
-                            word_token = self.add_word_token(word_id, word, chunk_counter, enum, symb_enum-len(word), symb_enum )
-                        word = ""
+                        if re.match(self.linebreak, symbol):
+                            #print("linebreak",  "word = ", word)
+                            gar_id = self.add_garbage(symbol, "<IsLineBreak>")
+                            gartok_id = self.add_garbage_token(gar_id, chunk[0], enum, symb_enum, symb_enum+1)
+                            if word != "":
+                                word_id = self.add_word(word)
+                                word_token = self.add_word_token(word_id, word, chunk[0], enum, symb_enum-len(word), symb_enum )
+                            word = ""
 
-                    elif re.match(self.sentencebreak, symbol):
-                        gar_id = self.add_garbage(symbol, "<IsSentenceBreak>")
-                        #print("sentencebreak", "word = ", word)
-                        gartok_id = self.add_garbage_token(gar_id, chunk_counter, enum, symb_enum, symb_enum+1)
-                        if word != "":
-                            word_id = self.add_word(word)
-                            word_token = self.add_word_token(word_id, word, chunk_counter, enum, symb_enum-len(word), symb_enum )
-                        word = ""
-
-                    elif re.match(self.wordbreak, symbol):
-                        #print("wordbreak: ",  "word = ", word)
-                        gar_id = self.add_garbage(symbol, "<IsWordBreak>")
-                        gartok_id = self.add_garbage_token(gar_id, chunk_counter, enum, symb_enum, symb_enum+1)
-                        if word != "":
-                            word_id = self.add_word(word)
-                            word_token = self.add_word_token(word_id, word, chunk_counter, enum, symb_enum-len(word), symb_enum )
-                        word = ""
-
-                    else:
-                        #print("wordgrow ",  "word = ", word)
-                        symbol_id = self.add_symbol(symbol)
-                        symbol_tok = self.add_symbol_token(symbol_id,
-                                                              symbol,
-                                                              chunk_counter,
-                                                              enum,
-                                                              symb_enum)
-                        word += symbol
-
-                        
-                if word != "":
-                    #print("worddddd",  "word = ", word)
-                    word_id = self.add_word(word)
-                    word_token = self.add_word_token(word_id, word, chunk_counter, enum, symb_enum-len(word), symb_enum )
-
-                for gar in sentence[1]:
-                    gar_id = self.add_garbage(gar[1], gar[2])
-                    gartok_id = self.add_garbage_token(gar_id, chunk_counter, enum, gar[0][0], gar[0][1])
-
-        self.db_cur.execute(UPD_FINIS)
-        self.db_con.commit()
+                        #elif re.match(self.sentencebreak, symbol):
+                        #    gar_id = self.add_garbage(symbol, "<IsSentenceBreak>")
+                            #print("sentencebreak", "word = ", word)
+                        #    gartok_id = self.add_garbage_token(gar_id, chunk[0], enum, symb_enum, symb_enum+1)
+                        #    if word != "":
+                        #        word_id = self.add_word(word)
+                        #        word_token = self.add_word_token(word_id, word, chunk[0], enum, symb_enum-len(word), symb_enum )
+                        #    word = "" 
 
 
+                        elif re.match(self.wordbreak, symbol):
+                            #print("wordbreak: ",  "word = ", word)
+                            gar_id = self.add_garbage(symbol, "<IsWordBreak>")
+                            gartok_id = self.add_garbage_token(gar_id, chunk[0], enum, symb_enum, symb_enum+1)
+                            if word != "":
+                                word_id = self.add_word(word)
+                                word_token = self.add_word_token(word_id, word, chunk[0], enum, symb_enum-len(word), symb_enum )
+                            word = ""
 
+                        else:
+                            #print("wordgrow ",  "word = ", word)
+                            symbol_id = self.add_symbol(symbol)
+                            symbol_tok = self.add_symbol_token(symbol_id,
+                                                                  symbol,
+                                                                  chunk[0],
+                                                                  enum,
+                                                                  symb_enum)
+                            word += symbol
+
+                            
+                    if word != "":
+                        #print("worddddd",  "word = ", word)
+                        word_id = self.add_word(word)
+                        word_token = self.add_word_token(word_id, word, chunk[0], enum, symb_enum-len(word), symb_enum )
+
+                    for gar in sentence[1]:
+                        gar_id = self.add_garbage(gar[1], gar[2])
+                        gartok_id = self.add_garbage_token(gar_id, chunk[0], enum, gar[0][0], gar[0][1])
+
+            self.db_cur.execute(UPD_FINIS)
+            self.db_con.commit()
+
+
+    def reconstruction_check(self, chunk_number, by="Symbols"):
+        if by == "Symbols":
+            self.db_cur.execute(GET_ALLSTO, [chunk_number])
+            self.db_cur.row_factory = None
+        else:
+            self.db_cur.execute(GET_ALLWTO, [chunk_number])
+            self.db_cur.row_factory = None
+        chunk_elements= self.db_cur.fetchmany(1)
+        #position_count = [chunk[2],chunk[3],chunk[4]]
+        #pre_position_count = [chunk[2],chunk[3],chunk[4]]
+        sentence = chunk_elements[0][3]
+        old_sentence =  chunk_elements[0][3]
+        reconstructed = [[]]*(sentence+1)
+        
+        while  chunk_elements:
+            element = chunk_elements[0][0]
+            if element == "":
+                    element = chunk_elements[0][1]
+
+            if old_sentence == sentence:
+                if by == "Symbols":
+                    reconstructed[sentence].append(element)
+                else:
+                    reconstructed[sentence] += list(element)
+            else:
+                reconstructed = reconstructed + ([[]] * (sentence+1-len(reconstructed)))
+                if by == "Symbols":
+                    reconstructed[sentence].append(element)
+                else:
+                    reconstructed[sentence] += list(element)
+
+            old_sentence = chunk_elements[0][3]
+            chunk_elements = self.db_cur.fetchmany(1)
+            if chunk_elements:
+                sentence = chunk_elements[0][3]
+        print("Sin basura: ","".join([y for x in reconstructed for y in x]))
+        #print(reconstructed[0])
+
+
+        self.db_cur.execute(GET_ALLGAR, [chunk_number])
+        self.db_cur.row_factory = None
+        gar_sec = self.db_cur.fetchmany(1)
+        sentence = gar_sec[0][2] 
+        begin = gar_sec[0][3]  
+        final = gar_sec[0][4]
+        garbage = gar_sec[0][0]
+        while gar_sec:
+            sentence = gar_sec[0][2] 
+            begin = gar_sec[0][3]  
+            final = gar_sec[0][4]
+            garbage = gar_sec[0][0]
+            """if sentence == 0:
+                print(sentence, garbage, begin, final)"""
+            print("".join([y for x in reconstructed for y in x]))
+            if sentence < len(reconstructed):
+                for counter, g in enumerate(garbage, start=0):
+                    reconstructed[sentence].insert(begin+counter, g)
+            else:
+                reconstructed = reconstructed + ([[]] * (sentence+1-len(reconstructed)))
+                for counter, g in enumerate(garbage, start=0):
+                    reconstructed[sentence].insert(begin+counter, g)
+            gar_sec = self.db_cur.fetchmany(1)
+        print("Con basura: ", "".join([y for x in reconstructed for y in x]))
+        #print(reconstructed[0])
+                
     def Disconnect(self):
         self.db_con.close()
