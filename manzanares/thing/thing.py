@@ -5,6 +5,7 @@ import re
 import logging
 from os import path
 from urllib.request import pathname2url
+import difflib
 
 import sys
 sys.path.append(path.join(path.dirname(__file__), '../..'))
@@ -489,60 +490,68 @@ class thing():
         chunk_elements= self.db_cur.fetchmany(1)
         #position_count = [chunk[2],chunk[3],chunk[4]]
         #pre_position_count = [chunk[2],chunk[3],chunk[4]]
-        sentence = chunk_elements[0][3]
-        old_sentence =  chunk_elements[0][3]
-        reconstructed = [[]]*(sentence+1)
+        if chunk_elements:
+            sentence = chunk_elements[0][3]
+            old_sentence =  chunk_elements[0][3]
+            reconstructed = [[]]*(sentence+1)
         
-        while  chunk_elements:
-            element = chunk_elements[0][0]
-            if element == "":
-                    element = chunk_elements[0][1]
+            while  chunk_elements:
+                element = chunk_elements[0][0]
+                if element == "":
+                        element = chunk_elements[0][1]
 
-            if old_sentence == sentence:
-                if by == "Symbols":
-                    reconstructed[sentence].append(element)
+                if old_sentence == sentence:
+                    if by == "Symbols":
+                        reconstructed[sentence].append(element)
+                    else:
+                        reconstructed[sentence] += list(element)
                 else:
-                    reconstructed[sentence] += list(element)
-            else:
-                reconstructed = reconstructed + ([[]] * (sentence+1-len(reconstructed)))
-                if by == "Symbols":
-                    reconstructed[sentence].append(element)
-                else:
-                    reconstructed[sentence] += list(element)
+                    reconstructed = reconstructed + ([[]] * (sentence+1-len(reconstructed)))
+                    if by == "Symbols":
+                        reconstructed[sentence].append(element)
+                    else:
+                        reconstructed[sentence] += list(element)
 
-            old_sentence = chunk_elements[0][3]
-            chunk_elements = self.db_cur.fetchmany(1)
-            if chunk_elements:
-                sentence = chunk_elements[0][3]
-        print("Sin basura: ","".join([y for x in reconstructed for y in x]))
-        #print(reconstructed[0])
+                old_sentence = chunk_elements[0][3]
+                chunk_elements = self.db_cur.fetchmany(1)
+                if chunk_elements:
+                    sentence = chunk_elements[0][3]
 
 
-        self.db_cur.execute(GET_ALLGAR, [chunk_number])
-        self.db_cur.row_factory = None
-        gar_sec = self.db_cur.fetchmany(1)
-        sentence = gar_sec[0][2] 
-        begin = gar_sec[0][3]  
-        final = gar_sec[0][4]
-        garbage = gar_sec[0][0]
-        while gar_sec:
+            self.db_cur.execute(GET_ALLGAR, [chunk_number])
+            self.db_cur.row_factory = None
+            gar_sec = self.db_cur.fetchmany(1)
             sentence = gar_sec[0][2] 
             begin = gar_sec[0][3]  
             final = gar_sec[0][4]
             garbage = gar_sec[0][0]
-            """if sentence == 0:
-                print(sentence, garbage, begin, final)"""
-            print("".join([y for x in reconstructed for y in x]))
-            if sentence < len(reconstructed):
-                for counter, g in enumerate(garbage, start=0):
-                    reconstructed[sentence].insert(begin+counter, g)
-            else:
-                reconstructed = reconstructed + ([[]] * (sentence+1-len(reconstructed)))
-                for counter, g in enumerate(garbage, start=0):
-                    reconstructed[sentence].insert(begin+counter, g)
-            gar_sec = self.db_cur.fetchmany(1)
-        print("Con basura: ", "".join([y for x in reconstructed for y in x]))
-        #print(reconstructed[0])
+            while gar_sec:
+                sentence = gar_sec[0][2] 
+                begin = gar_sec[0][3]  
+                final = gar_sec[0][4]
+                garbage = gar_sec[0][0]
+                """if sentence == 0:
+                    print(sentence, garbage, begin, final)"""
+                if sentence < len(reconstructed):
+                    for counter, g in enumerate(garbage, start=0):
+                        reconstructed[sentence].insert(begin+counter, g)
+                else:
+                    reconstructed = reconstructed + ([[]] * (sentence+1-len(reconstructed)))
+                    for counter, g in enumerate(garbage, start=0):
+                        reconstructed[sentence].insert(begin+counter, g)
+                gar_sec = self.db_cur.fetchmany(1)
+            generada =  "".join([y for x in reconstructed for y in x])
+
+            for chunk in ChunkReader(self.text_file,end=self.linebreak):
+                if chunk != "":
+                    if chunk[0] == chunk_number:
+                        if generada == chunk[1]:
+                            print("--->",chunk_number,": Una chimbaaaa!!!")
+                        else:
+                            print("--->",chunk_number,"O: ",chunk[1])
+                            print("--->",chunk_number,"G: ",generada)
+
+
                 
     def Disconnect(self):
         self.db_con.close()

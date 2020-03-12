@@ -12,7 +12,7 @@ def test_master_block(tmpdir_factory):
     tmp_folder = tmpdir_factory.mktemp("data")
 
     starttime = timeit.default_timer()
-
+    """
     thing1 = thing('Name', 'Description', 'manzanares/test', 'lorem.txt', 'UTF-8', r'(?:[.¿?¿!\"]+)(?=(?:\s*[A-Z])|$|(?:"\.)|(?:\s+\n+))', '[\n+]',
                     r'[\s+]', ['L1','L2'], [(r"[\!\¡\¿\?\,]","")],
                    db_folder=tmp_folder)
@@ -23,6 +23,7 @@ def test_master_block(tmpdir_factory):
     print("*** ---> Processing_text:\t{}".format(timeit.default_timer() - starttime))
     
     thing1.Disconnect()
+    """
 
     """starttime = timeit.default_timer()
     thing2 = thing('Name', 'Description', 'manzanares/test', 'lorem.txt', 'UTF-8', r'([\.])', '[\n+]',
@@ -37,11 +38,13 @@ def test_master_block(tmpdir_factory):
     print("*** ---> Reopen Objetc 2 time :\t{}".format(timeit.default_timer() - starttime))
 
     starttime = timeit.default_timer()
-    thing3.reconstruction_check(1)
+    for i in range(0,5):
+        thing3.reconstruction_check(i)
     print("*** ---> Reconstruction by symbols :\t{}".format(timeit.default_timer() - starttime))
 
     starttime = timeit.default_timer()
-    thing3.reconstruction_check(1, by="Word")
+    for i in range(0,5):
+        thing3.reconstruction_check(i, by="Word")
     print("*** ---> Reconstruction by words :\t{}".format(timeit.default_timer() - starttime))
     #thing3.reconstruction_check(1, by="Words")
     thing3.Disconnect()
