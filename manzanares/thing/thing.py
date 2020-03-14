@@ -409,17 +409,18 @@ class thing():
         for chunk in self.chunk_reader:
             if chunk !="":      
                 sentences, splitters = split_sentence(self.sentencebreak,chunk[1])
-                if sentences:
-                    sentences_lens = [len(x) for x in sentences]
-                    normals = [normalize_txt(x, self.cleanpatt) for x in sentences]
 
                 if splitters:
                     splitters_lens = [len(x) for x in splitters]
+
+                if sentences:
+                    sentences_lens = [len(x) for x in sentences]
+                    normals = [normalize_txt(x, self.cleanpatt) for x in sentences]
                 
 
                 for enum, sentence in enumerate(normals, start=0):
                     #print("sentence:::   ",sentence)
-                    if enum < len(splitters):
+                    if enum <= len(splitters):
                         gar_id = self.add_garbage(splitters[enum], "<IsSentenceBreak>")
                         gartok_id = self.add_garbage_token(gar_id, chunk[0], enum, sentences_lens[enum], splitters_lens[enum])
                     
@@ -543,14 +544,17 @@ class thing():
             generada =  "".join([y for x in reconstructed for y in x])
 
             for chunk in ChunkReader(self.text_file,end=self.linebreak):
+                print("********<<<<<<<<< ",chunk," >>>*********")
+                print("********<<<<<<<<< ",chunk != ""," >>>*********")
                 if chunk != "":
                     if chunk[0] == chunk_number:
                         if generada == chunk[1]:
                             print("--->",chunk_number,": Una chimbaaaa!!!")
+                            print()
                         else:
-                            print("--->",chunk_number,"O: ",chunk[1])
-                            print("--->",chunk_number,"G: ",generada)
-
+                            print("--->",chunk_number,"O: ","{}".format(chunk[1]).encode("utf8"))
+                            print("--->",chunk_number,"G: ","{}".format(generada).encode("utf8"))
+                            print()
 
                 
     def Disconnect(self):

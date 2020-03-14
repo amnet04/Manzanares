@@ -47,7 +47,7 @@ def normalize_txt(text,patterns):
     cleaned = []
     clean_text = text
     for pattern in patterns:
-        #print(pattern)
+        #print("----->>> Patte:",pattern)
         for match in re.finditer(pattern[0], text):
             cleaned.append([match.span(), match.group(), pattern[1]])
             clean_text = re.sub(pattern[0], pattern[1], clean_text)
@@ -55,13 +55,16 @@ def normalize_txt(text,patterns):
 
 def split_sentence(sbreak, text):
     spl = re.compile(sbreak)
-    new_text = re.split(spl,text)
-    try:
-        new_text = new_text.remove('')
-    except:
-        pass
-    splitters = re.findall(spl,text)
-    return(new_text,splitters)
+    sentence_list = re.split(spl,text)
+    split_list = re.findall(spl,text)
+    if len(sentence_list) == len(split_list):
+        return(sentence_list,split_list)
+    else:
+        raise ValueError("""La expresión regular para dividir oraciones 
+no produce listas del  mismo tamaño para oraciones  y separadores:
+Oraciones: {}
+Separadores: {}""".format(sentence_list, split_list))
+
 
 def process_sentence(sentence, clean_p, alpha, token_base, gs):
     if clean_p:
